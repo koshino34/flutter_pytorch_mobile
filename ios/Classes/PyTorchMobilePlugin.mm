@@ -51,12 +51,16 @@ NSMutableArray *modules = [[NSMutableArray alloc] init];
             }
             
             try {
-                int len = (int) [data count];
-                float input[len];
+                int len = (int) [shape.firstObject intValue];
+                // 動的にメモリ確保
+                float *input = new float[len];
                 for(int i = 0; i < len; i++) {
                     input[i] = [ data[i] floatValue];
                 }
-                NSArray<NSNumber*>* output = [module predict:&input withShape:shape andDtype:dtype];
+                NSData *inputData = [NSData dataWithBytes:input length:len * sizeof(float)];
+                void *inputVoid = (void *)[inputData bytes];
+                NSArray<NSNumber*>* output = [module predict:inputVoid withShape:shape andDtype:dtype];
+                delete[] input;
                 result(output);
             } catch (const std::exception& e) {
                 NSLog(@"PyTorchMobile: %s", e.what());
